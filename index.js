@@ -4,29 +4,45 @@ const { decideAction } = require('./bot');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware pour parser le JSON
 app.use(express.json());
 
-// Middleware CORS complet (autorise toutes origines et méthodes nécessaires)
+// Middleware CORS (autorise toutes les origines et méthodes)
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS'); // ✅ POST au lieu de GET
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(204); 
+    return res.sendStatus(204);
   }
   next();
 });
 
-// ✅ Remplacer GET par POST
-app.post('/action', (req, res) => {
+// ✅ GET (par défaut pour Gogokodo)
+app.get('/action', (req, res) => {
   try {
-    const gameState = req.body;
-    const decision = decideAction(gameState);
+    const defaultMap = {
+      map: [
+        [' ', ' ', ' '],
+        [' ', '🤖', ' '],
+        [' ', ' ', ' ']
+      ]
+    };
+    const decision = decideAction(defaultMap); // fallback si pas de body
     res.json(decision);
   } catch (error) {
-    console.error('Erreur dans /action:', error);
-    res.status(500).json({ error: 'Erreur interne serveur' });
+    console.error('Erreur GET /action:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ✅ POST (pour tester manuellement ou simuler)
+app.post('/action', (req, res) => {
+  try {
+    const decision = decideAction(req.body);
+    res.json(decision);
+  } catch (error) {
+    console.error('Erreur POST /action:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
