@@ -13,7 +13,7 @@ function isCellSafe(cell) {
   return cell !== '💥';
 }
 
-// Cherche la cible la plus proche (trophée ou point)
+// Cherche la cible la plus proche (🏆 ou 💎)
 function findNearestTarget(map, targetChars, botPos) {
   let nearest = null;
   let minDist = Infinity;
@@ -34,7 +34,7 @@ function findNearestTarget(map, targetChars, botPos) {
   return nearest;
 }
 
-// Retourne la meilleure direction pour aller vers une cible (ou bouger si rien)
+// Retourne une direction vers la cible OU un mouvement aléatoire vers une case sûre
 function getMoveDirection(botPos, targetPos, map) {
   const directions = [
     { dir: "UP", x: 0, y: -1 },
@@ -43,7 +43,7 @@ function getMoveDirection(botPos, targetPos, map) {
     { dir: "RIGHT", x: 1, y: 0 }
   ];
 
-  // 1. Se rapprocher d'une cible si elle existe
+  // 1. Aller vers la cible si elle existe
   if (targetPos) {
     for (const { dir, x, y } of directions) {
       const newX = botPos.x + x;
@@ -60,25 +60,28 @@ function getMoveDirection(botPos, targetPos, map) {
     }
   }
 
-  // 2. Aucune cible : essayer de bouger vers une case vide et sûre
-  for (const { dir, x, y } of directions) {
+  // 2. Sinon → choisir un mouvement aléatoire vers une case vide et sûre
+  const safeDirections = directions.filter(({ x, y }) => {
     const newX = botPos.x + x;
     const newY = botPos.y + y;
-    if (
+    return (
       newX >= 0 && newX < map[0].length &&
       newY >= 0 && newY < map.length &&
       isCellSafe(map[newY][newX]) &&
       map[newY][newX] === ' '
-    ) {
-      return dir;
-    }
+    );
+  });
+
+  if (safeDirections.length > 0) {
+    const random = Math.floor(Math.random() * safeDirections.length);
+    return safeDirections[random].dir;
   }
 
-  // 3. Bloqué : reste sur place
+  // 3. Aucune issue sûre → rester
   return "STAY";
 }
 
-// Vérifie si un ennemi est adjacent au bot
+// Vérifie s’il y a un ennemi adjacent
 function isEnemyNearby(botPos, map) {
   const directions = [
     { x: 0, y: -1 }, { x: 0, y: 1 },
@@ -102,7 +105,7 @@ function isEnemyNearby(botPos, map) {
   return false;
 }
 
-// Fonction principale appelée par l'API
+// Fonction principale appelée par l’API
 function decideAction(state) {
   const map = state.map;
   const botPos = findBotPosition(map);
@@ -111,7 +114,7 @@ function decideAction(state) {
     return { move: "STAY", action: "NONE" };
   }
 
-  // Si un ennemi est adjacent : poser une bombe
+  // 1. Poser une bombe si ennemi proche
   if (isEnemyNearby(botPos, map)) {
     return {
       move: "STAY",
@@ -120,7 +123,7 @@ function decideAction(state) {
     };
   }
 
-  // Trouver la cible la plus proche
+  // 2. Trouver la cible la plus proche
   const target = findNearestTarget(map, ['🏆', '💎'], botPos);
   const move = getMoveDirection(botPos, target, map);
 
