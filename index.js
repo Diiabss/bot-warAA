@@ -7,8 +7,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 
 app.get('/action', (req, res) => {
-  const gameState = req.body || {}; 
-  const decision = decideAction(gameState);
+  const decision = decideAction(); 
   res.json(decision);
 });
 

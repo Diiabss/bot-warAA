@@ -61,21 +61,9 @@ function isSafeMove(map, pos, direction) {
   return false;
 }
 
-function decideAction(state) {
-  const map = state.map;
-  if (!map) return { move: "STAY", action: "NONE" };
-
-  const botPos = findBotPosition(map);
-  const target = findNearestTarget(map, ['🏆', '💎'], botPos);
-
-  let move = getMoveDirection(botPos, target);
-
-  if (!isSafeMove(map, botPos, move)) {
-    move = "STAY";
-  }
-
+function decideAction() {
   return {
-    move,
+    move: "RIGHT",
     action: "COLLECT"
   };
 }
